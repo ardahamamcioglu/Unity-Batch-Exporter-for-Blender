@@ -12,9 +12,35 @@ import bpy
 from bpy import context
 import os
 
+class ImportSettings(PropertyGroup):
+
+	path = StringProperty(name="",description="Path to Directory",default="",maxlen=1024,subtype='DIR_PATH')
+
+class UnityExporterPanel(bpy.types.Panel):
+	bl_label = "Unity Exporter"
+	bl_idname = "OBJECT_PT_unityExport"
+	bl_space_type = 'PROPERTIES'
+	bl_region_type = 'WINDOW'
+	bl_context = "output"
+
+	def draw(self, context):
+		layout = self.layout
+
+		obj = context.object
+
+		row = layout.row()
+		row.prop(bpy.ops.object.unity_batch_exporter,"projectPath",text="")
+		
+		row = layout.row()
+		row.operator("object.unity_batch_export")
+
+		print(bpy.ops.object.unity_batch_exporter.projectPath)
+
+
 class UnityBatchExport(bpy.types.Operator):
 	bl_idname = "object.unity_batch_export"
 	bl_label = "Unity Batch Exporter"
+	projectPath = ""
 
 	def execute(self,context):
 		scene = context.scene
@@ -53,11 +79,18 @@ def menu_func(self,context):
 	self.layout.operator(UnityBatchExport.bl_idname)
 
 def register():
+	bpy.utils.register_class(UnityExporterPanel)
 	bpy.utils.register_class(UnityBatchExport)
 	bpy.types.TOPBAR_MT_file_export.append(menu_func)
+	bpy.utils.register_module(__name__)
+	bpy.ops.object.unity_batch_exporter = PointerProperty(type=ImportSettings)
+	
 
 def unregister():
 	bpy.utils.unregister_class(UnityBatchExport)
+	bpy.utils.unregister_class(UnityExporterPanel)
+	bpy.utils.unregister_module(__name__)
+	del bpy.ops.object.unity_batch_exporter
 # This allows you to run the script directly from Blender's Text editor
 # to test the add-on without having to install it.
 
