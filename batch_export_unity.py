@@ -42,7 +42,7 @@ class UnityBatchExport(bpy.types.Operator):
             name = bpy.path.clean_name(obj.name)
             fn = os.path.join(exportdir, name)
             bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
-            bpy.ops.export_scene.fbx(filepath=fn + ".fbx", use_selection=True, bake_space_transform=True, axis_forward="Z",axis_up="Y")
+            bpy.ops.export_scene.fbx(filepath=fn + ".fbx", use_selection=True, bake_space_transform=True, axis_forward="-Z",axis_up="Y",apply_scale_options="FBX_SCALE_ALL")
             obj.select = False
 
             print("written:", fn)
