@@ -33,18 +33,16 @@ class UnityBatchExport(bpy.types.Operator):
 			raise Exception("Blend file is not saved")
 
 		for collection in collections:
-			if not len(collections)==0: 
-				collectionPath = exportdir +"/" + collection.name
+			collectionPath = exportdir +"/" + collection.name
 			if collection.all_objects == 0:
 				os.remove(collectionPath)
 			elif not "*" in collection.name:
-				
 				if not os.path.isdir(collectionPath):
-					os.mkdir(collecionPath)
+					os.mkdir(collectionPath)
 				for obj in collection.all_objects:
 					if obj.type in ["MESH"]:
 						name = bpy.path.clean_name(obj.name)
-						fn = os.path.join(exportdir, name)
+						fn = os.path.join(collectionPath,name)
 						bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
 						bpy.ops.export_scene.fbx(filepath=fn + ".fbx", use_selection=True, bake_space_transform=True, axis_forward="-Z",axis_up="Y",apply_scale_options="FBX_SCALE_ALL")
 						print("written:", fn)
