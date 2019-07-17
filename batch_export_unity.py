@@ -2,7 +2,7 @@ bl_info = {
 	"name": "Unity Batch Exporter",
 	"description": "Exports selected objects as individual fbx files for Unity game engine.",
 	"author": "Arda Hamamcıoğlu",
-	"version": (1, 1),
+	"version": (2, 0),
    "blender" : (2, 80, 0),
 	"support": "COMMUNITY",
 	"category": "Import-Export"
