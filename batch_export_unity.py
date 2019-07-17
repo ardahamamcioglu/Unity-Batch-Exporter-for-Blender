@@ -21,8 +21,6 @@ class UnityBatchExport(bpy.types.Operator):
 		selection = context.selected_objects
 		collections = bpy.data.collections
 		
-		if len(selection) == 0:
-			raise Exception("No Object Selected to Export")
 		# export to blend file location
 		basedir = os.path.dirname(bpy.data.filepath)
 		exportdir = basedir+"/UnityExports"
@@ -41,12 +39,13 @@ class UnityBatchExport(bpy.types.Operator):
 					os.mkdir(collectionPath)
 				for obj in collection.all_objects:
 					if obj.type in ["MESH"]:
+						obj.select_set(True)
 						name = bpy.path.clean_name(obj.name)
 						fn = os.path.join(collectionPath,name)
 						bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
 						bpy.ops.export_scene.fbx(filepath=fn + ".fbx", use_selection=True, bake_space_transform=True, axis_forward="-Z",axis_up="Y",apply_scale_options="FBX_SCALE_ALL")
+						obj.select_set(False)
 						print("written:", fn)
-			
 		return{'FINISHED'}
 
 def menu_func(self,context):
@@ -58,6 +57,7 @@ def register():
 
 def unregister():
 	bpy.utils.unregister_class(UnityBatchExport)
+	
 # This allows you to run the script directly from Blender's Text editor
 # to test the add-on without having to install it.
 
