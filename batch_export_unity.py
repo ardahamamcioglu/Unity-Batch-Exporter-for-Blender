@@ -2,7 +2,7 @@ bl_info = {
 	"name": "Unity Batch Exporter",
 	"description": "Exports objects directly into the unity project respecting collection hierarchy and ignore flags.",
 	"author": "Arda Hamamcıoğlu",
-	"version": (2, 0),
+	"version": (2, 0, 1),
 	"blender" : (2, 80, 0),
 	"support": "COMMUNITY",
 	"category": "Import-Export"
@@ -59,7 +59,7 @@ class UnityBatchExport(Operator):
 		
 		if len(selection) == 0:
 			raise Exception("No Object Selected to Export")
-		# export to blend file location
+
 		projectdir = scene.project_path
 
 		if not os.path.isdir(projectdir):
@@ -69,6 +69,7 @@ class UnityBatchExport(Operator):
 		
 		if not os.path.isdir(exportdir):
 			os.makedirs(exportdir)
+			
 		if not exportdir:
 			raise Exception("Blend file has not been not saved yet.")
 		
@@ -95,14 +96,10 @@ class UnityBatchExport(Operator):
 			
 		return{'FINISHED'}
 
-#def menu_func(self,context):
-#   self.layout.operator(UnityBatchExport.bl_idname)
-
 def register():
 	bpy.utils.register_class(UnityExporterPanel)
 	bpy.utils.register_class(UnityBatchExport)
 	bpy.types.Scene.project_path = bpy.props.StringProperty(name="Project Path", default = "", description = "Navigate to the Unity project file.", subtype = 'FILE_PATH')
-#   bpy.types.TOPBAR_MT_file_export.append(menu_func)
 
 def unregister():
 	bpy.utils.unregister_class(UnityExporterPanel)
