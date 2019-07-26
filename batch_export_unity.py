@@ -2,12 +2,8 @@ bl_info = {
 	"name": "Unity Batch Exporter",
 	"description": "Exports objects directly into the unity project respecting collection hierarchy and ignore flags.",
 	"author": "Arda Hamamcıoğlu",
-<<<<<<< Updated upstream
 	"version": (2, 0),
-=======
-	"version": (1, 9 ,1),
->>>>>>> Stashed changes
-   "blender" : (2, 80, 0),
+	"blender" : (2, 80, 0),
 	"support": "COMMUNITY",
 	"category": "Import-Export"
 }
@@ -25,34 +21,6 @@ from bpy.types import (Panel,
 import os
 import shutil
 
-<<<<<<< Updated upstream
-class ImportSettings(PropertyGroup):
-
-	path = StringProperty(name="",description="Path to Directory",default="",maxlen=1024,subtype='DIR_PATH')
-
-class UnityExporterPanel(bpy.types.Panel):
-	bl_label = "Unity Exporter"
-	bl_idname = "OBJECT_PT_unityExport"
-	bl_space_type = 'PROPERTIES'
-	bl_region_type = 'WINDOW'
-	bl_context = "output"
-
-	def draw(self, context):
-		layout = self.layout
-
-		obj = context.object
-
-		row = layout.row()
-		row.prop(bpy.ops.object.unity_batch_exporter,"projectPath",text="")
-		
-		row = layout.row()
-		row.operator("object.unity_batch_export")
-
-		print(bpy.ops.object.unity_batch_exporter.projectPath)
-
-
-class UnityBatchExport(bpy.types.Operator):
-=======
 class UnityExporterPanel(Panel):
 	bl_idname = "OBJECT_PT_my_panel"
 	bl_label = "My Tool"
@@ -80,7 +48,6 @@ class UnityExporterPanel(Panel):
 		row.label(text="Add * in Collection name to ignore.")
 		
 class UnityBatchExport(Operator):
->>>>>>> Stashed changes
 	bl_idname = "object.unity_batch_export"
 	bl_label = "Unity Batch Exporter"
 	projectPath = ""
@@ -93,7 +60,6 @@ class UnityBatchExport(Operator):
 		if len(selection) == 0:
 			raise Exception("No Object Selected to Export")
 		# export to blend file location
-		basedir = os.path.dirname(bpy.data.filepath)
 		projectdir = scene.project_path
 
 		if not os.path.isdir(projectdir):
@@ -135,28 +101,13 @@ class UnityBatchExport(Operator):
 def register():
 	bpy.utils.register_class(UnityExporterPanel)
 	bpy.utils.register_class(UnityBatchExport)
-<<<<<<< Updated upstream
-	bpy.types.TOPBAR_MT_file_export.append(menu_func)
-	bpy.utils.register_module(__name__)
-	bpy.ops.object.unity_batch_exporter = PointerProperty(type=ImportSettings)
-	
-=======
 	bpy.types.Scene.project_path = bpy.props.StringProperty(name="Project Path", default = "", description = "Navigate to the Unity project file.", subtype = 'FILE_PATH')
 #   bpy.types.TOPBAR_MT_file_export.append(menu_func)
->>>>>>> Stashed changes
 
 def unregister():
 	bpy.utils.unregister_class(UnityExporterPanel)
 	bpy.utils.unregister_class(UnityBatchExport)
-<<<<<<< Updated upstream
-	bpy.utils.unregister_class(UnityExporterPanel)
-	bpy.utils.unregister_module(__name__)
-	del bpy.ops.object.unity_batch_exporter
-# This allows you to run the script directly from Blender's Text editor
-# to test the add-on without having to install it.
-=======
 	del bpy.types.Scene.project_path
->>>>>>> Stashed changes
 
 if __name__ == "__main__":
 	register()
