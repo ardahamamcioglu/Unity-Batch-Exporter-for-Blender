@@ -2,7 +2,7 @@ bl_info = {
 	"name": "Unity Batch Exporter",
 	"description": "Exports objects directly into the unity project respecting collection hierarchy and ignore flags.",
 	"author": "Arda Hamamcıoğlu",
-	"version": (2, 0, 1),
+	"version": (2, 0, 2),
 	"blender" : (2, 80, 0),
 	"support": "COMMUNITY",
 	"category": "Import-Export"
@@ -23,7 +23,7 @@ import shutil
 
 class UnityExporterPanel(Panel):
 	bl_idname = "OBJECT_PT_my_panel"
-	bl_label = "My Tool"
+	bl_label = "Unity Batch Export"
 	bl_space_type = "VIEW_3D"
 	bl_region_type = "UI"
 	bl_category = "Unity Exporter"
@@ -54,13 +54,9 @@ class UnityBatchExport(Operator):
 
 	def execute(self,context):
 		scene = context.scene
-		selection = context.selected_objects
 		collections = bpy.context.scene.collection.children 
-		
-		if len(selection) == 0:
-			raise Exception("No Object Selected to Export")
 
-		projectdir = scene.project_path
+		projectdir = bpy.path.abspath(scene.project_path)
 
 		if not os.path.isdir(projectdir):
 			raise Exception("No project path selected.")
@@ -88,10 +84,12 @@ class UnityBatchExport(Operator):
 					os.mkdir(collectionPath)
 				for obj in collection.all_objects:
 					if obj.type in ["MESH"]:
+						obj.select_set(True)
 						name = bpy.path.clean_name(obj.name)
 						fn = os.path.join(collectionPath,name)
 						bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
 						bpy.ops.export_scene.fbx(filepath=fn + ".fbx", use_selection=True, bake_space_transform=True, axis_forward="-Z",axis_up="Y",apply_scale_options="FBX_SCALE_ALL")
+						obj.select_set(False)
 						print("written:", fn)
 			
 		return{'FINISHED'}
@@ -99,7 +97,7 @@ class UnityBatchExport(Operator):
 def register():
 	bpy.utils.register_class(UnityExporterPanel)
 	bpy.utils.register_class(UnityBatchExport)
-	bpy.types.Scene.project_path = bpy.props.StringProperty(name="Project Path", default = "", description = "Navigate to the Unity project file.", subtype = 'FILE_PATH')
+	bpy.types.Scene.project_path = bpy.props.StringProperty(name="Project Path", default = "", description = "Navigate to the Unity project file.", subtype = 'DIR_PATH')
 
 def unregister():
 	bpy.utils.unregister_class(UnityExporterPanel)
