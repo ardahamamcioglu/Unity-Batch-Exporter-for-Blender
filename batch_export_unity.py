@@ -2,7 +2,7 @@ bl_info = {
 	"name": "Unity Batch Exporter",
 	"description": "Exports objects directly into the unity project respecting collection hierarchy and ignore flags.",
 	"author": "Arda Hamamcıoğlu",
-	"version": (2, 0, 2),
+	"version": (2, 0, 4),
 	"blender" : (2, 80, 0),
 	"support": "COMMUNITY",
 	"category": "Import-Export"
@@ -22,7 +22,7 @@ import os
 import shutil
 
 class UnityExporterPanel(Panel):
-	bl_idname = "OBJECT_PT_my_panel"
+	bl_idname = "OBJECT_PT_unity_export_panel"
 	bl_label = "Unity Batch Export"
 	bl_space_type = "VIEW_3D"
 	bl_region_type = "UI"
@@ -32,21 +32,20 @@ class UnityExporterPanel(Panel):
 	def draw(self, context):
 		layout = self.layout
 		scn = context.scene
-		
-		
+
 		row = layout.box()
-		row.label(text="1)Select Unity Project File:")
+		row.label(text="1)Select Unity Project Folder:")
 		
 		row.prop(scn, "project_path",icon ='FILE_IMAGE')
 		
 		row = layout.box()
-		row.label(text="2)Select Unity Project File:")
+		row.label(text="2)Hit The Button To Export:")
 		
 		row.operator("object.unity_batch_export")
 		
 		row = layout.row()
 		row.label(text="Add * in Collection name to ignore.")
-		
+
 class UnityBatchExport(Operator):
 	bl_idname = "object.unity_batch_export"
 	bl_label = "Unity Batch Exporter"
