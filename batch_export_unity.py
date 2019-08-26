@@ -1,8 +1,8 @@
-bl_info = {
+nbl_info = {
 	"name": "Unity Batch Exporter",
 	"description": "Exports objects directly into the unity project respecting collection hierarchy and ignore flags.",
 	"author": "Arda Hamamcıoğlu",
-	"version": (2, 0, 4),
+	"version": (2, 0, 5),
 	"blender" : (2, 80, 0),
 	"support": "COMMUNITY",
 	"category": "Import-Export"
@@ -53,7 +53,8 @@ class UnityBatchExport(Operator):
 
 	def execute(self,context):
 		scene = context.scene
-		collections = bpy.context.scene.collection.children 
+		viewLayer = context.view_layer
+		collections = scene.collection.children
 
 		projectdir = bpy.path.abspath(scene.project_path)
 
@@ -70,26 +71,28 @@ class UnityBatchExport(Operator):
 		
 		bpy.ops.object.select_all(action='DESELECT')
 		
-		
 		for collection in collections:
 			collectionPath = exportdir +"/" + collection.name
-			if collection.all_objects == 0 or "*" in collection.name:
+			
+			if len(collection.objects)==0 or "*" in collection.name:
 				collectionPath = collectionPath.replace("*","")
 				print(collectionPath)
+				
 				if os.path.isdir(collectionPath):
 					shutil.rmtree(collectionPath)
+					
 			else:
 				if not os.path.isdir(collectionPath):
 					os.mkdir(collectionPath)
-				for obj in collection.all_objects:
-					if obj.type in ["MESH"]:
-						obj.select_set(True)
-						name = bpy.path.clean_name(obj.name)
-						fn = os.path.join(collectionPath,name)
-						bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
-						bpy.ops.export_scene.fbx(filepath=fn + ".fbx", use_selection=True, bake_space_transform=True, axis_forward="-Z",axis_up="Y",apply_scale_options="FBX_SCALE_ALL")
-						obj.select_set(False)
-						print("written:", fn)
+					
+				for obj in collection.objects:
+					obj.select_set(True)
+					name = obj.name
+					fn = os.path.join(collectionPath,name)
+					bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+					bpy.ops.export_scene.fbx(filepath=fn + ".fbx", use_selection=True, bake_space_transform=True,axis_forward="-Z",axis_up="Y",apply_scale_options="FBX_SCALE_ALL",check_existing=True,filter_glob="*.fbx",bake_anim=True,armature_nodetype='NULL',bake_anim_use_all_actions=True,embed_textures=False,object_types={'MESH'})
+					obj.select_set(False)
+					print("written:", fn)
 			
 		return{'FINISHED'}
 
