@@ -2,7 +2,7 @@ bl_info = {
 "name": "Unity Batch Exporter",
 "description": "Exports objects directly into the unity project respecting collection hierarchy and ignore flags.",
 "author": "Arda Hamamcıoğlu",
-"version": (2, 0, 5),
+"version": (2, 0, 6),
 "blender" : (2, 80, 0),
 "support": "COMMUNITY",
 "category": "Import-Export"
@@ -15,9 +15,9 @@ from bpy.types import (Panel,Operator,AddonPreferences,PropertyGroup)
 import os
 import shutil
 
-class MySettings(PropertyGroup):
-	my_bool = BoolProperty(name="Enable or Disable",description="A bool property",default = False)
-	project_path = StringProperty(name="Project Path", default = "", description = "Navigate to the Unity project file.", subtype = 'DIR_PATH')
+class MyProperties(bpy.types.PropertyGroup):
+	sync_all : bpy.props.BoolProperty(name="Enable or Disable",description="A bool property",default = False)
+	project_path : bpy.props.StringProperty(name="Project Path", default = "", description = "Navigate to the Unity project file.", subtype = 'DIR_PATH')
 
 class UnityExporterPanel(Panel):
 	bl_idname = "OBJECT_PT_unity_export_panel"
@@ -29,13 +29,12 @@ class UnityExporterPanel(Panel):
 
 	def draw(self, context):
 		layout = self.layout
-		scene = context.scene
-		mytool = scene.my_tool
+		mytool = context.scene.my_tools
 
 		row = layout.box()
 		row.label(text="1)Select Unity Project Folder:")
 
-		row.prop(scene, "project_path",icon ='FILE_IMAGE')
+		row.prop(mytool, "project_path",icon ='FILE_IMAGE')
 
 		row = layout.box()
 		row.label(text="2)Hit The Button To Export:")
@@ -43,7 +42,7 @@ class UnityExporterPanel(Panel):
 		row.operator("object.unity_batch_export")
 
 		row = layout.box()
-		row.prop(mytool,"my_bool", text="Sync Deleted Files")
+		row.prop(mytool,"sync_all", text="Sync Deleted Files")
 
 		row = layout.row()
 		row.label(text="Add * in Collection name to ignore.")
@@ -56,17 +55,17 @@ class UnityBatchExport(Operator):
 					scene = context.scene
 					viewLayer = context.view_layer
 					collections = scene.collection.children
-
+#Check if project path is entered.
 					if scene.project_path.strip():
 						projectDir = bpy.path.abspath(scene.project_path)
 					else:
 						raise Exception("No project path selected.")
-
+#Check if project path is valid
 					if not os.path.isdir(projectDir):
 						raise Exception("No project path is invalid.")
 
 					exportdir = projectDir +"Assets/Models"
-
+#Check if Models folder exists in the project
 					if not os.path.isdir(exportdir):
 						os.makedirs(exportdir)
 
@@ -77,9 +76,8 @@ class UnityBatchExport(Operator):
 
 						if len(collection.objects)==0 or "*" in collection.name:
 							collectionPath = collectionPath.replace("*","")
-							print(collectionPath)
 
-							if os.path.isdir(collectionPath):
+							if os.path.isdir(collectionPath) and scene.sync_all:
 								shutil.rmtree(collectionPath)
 						else:
 							if not os.path.isdir(collectionPath):
@@ -97,17 +95,17 @@ class UnityBatchExport(Operator):
 
 					return{'FINISHED'}
 
+classes = (MyProperties,UnityExporterPanel,UnityBatchExport)
+
 def register():
-	bpy.utils.register_class(UnityExporterPanel)
-	bpy.utils.register_class(UnityBatchExport)
-	bpy.utils.register_class(MySettings)
-	bpy.types.Scene.my_tool = PointerProperty(type=MySettings)
+	for c in classes:
+		bpy.utils.register_class(c)
+	bpy.types.Scene.my_tools = bpy.props.PointerProperty(type=MyProperties)
 
 def unregister():
-	bpy.utils.unregister_class(UnityExporterPanel)
-	bpy.utils.unregister_class(UnityBatchExport)
-	bpy.utils.register_module(MySettings)
-	del bpy.types.Scene.my_tool
+	for c in reversed(classes):
+		bpy.utils.unregister_class(c)
+	del bpy.types.Scene.my_tools
 
 if __name__ == "__main__":
 	register()
