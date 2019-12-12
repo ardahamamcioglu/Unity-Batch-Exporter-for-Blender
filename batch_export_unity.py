@@ -2,7 +2,7 @@ bl_info = {
 "name": "Unity Batch Exporter",
 "description": "Exports objects directly into the unity project respecting collection hierarchy and ignore flags.",
 "author": "Arda Hamamcıoğlu",
-"version": (2, 0, 7),
+"version": (2, 0, 8),
 "blender" : (2, 80, 0),
 "support": "COMMUNITY",
 "category": "Import-Export"
@@ -51,6 +51,38 @@ class UnityBatchExport(Operator):
 				bl_idname = "object.unity_batch_export"
 				bl_label = "Unity Batch Exporter"
 
+				def get_parent_collection_names(collection, parent_names):
+					for parent_collection in bpy.data.collections:
+					   if collection.name in parent_collection.children.keys():
+						   parent_names.append(parent_collection.name)
+						   UnityBatchExport.get_parent_collection_names(parent_collection, parent_names)
+						   return
+				
+				def turn_collection_hierarchy_into_path(obj):
+					parent_collection = obj.users_collection[0]
+					parent_names	  = []
+					parent_names.append(parent_collection.name)
+					UnityBatchExport.get_parent_collection_names(parent_collection, parent_names)
+					parent_names.reverse()
+					return '/'.join(parent_names)
+
+				def export_objects(objects,dir):
+					for asset in objects:
+						asset.select_set(True)
+
+						collectionPath = UnityBatchExport.turn_collection_hierarchy_into_path(asset)
+						exportPath = dir+'/'+collectionPath
+						if not os.path.isdir(exportPath):
+							os.makedirs(exportPath)
+						
+						name = asset.name
+						fn = os.path.join(exportPath,name)
+						bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+						bpy.context.object.hide_viewport = False
+						bpy.ops.export_scene.fbx(filepath=fn + ".fbx", use_selection=True, bake_space_transform=True,axis_forward="-Z",axis_up="Y",apply_scale_options="FBX_SCALE_ALL",check_existing=True,filter_glob="*.fbx",bake_anim=True,armature_nodetype='NULL',bake_anim_use_all_actions=True,embed_textures=False,object_types={'MESH'})
+						asset.select_set(False)
+						print("Exported:", asset.name)
+	
 				def execute(self,context):
 					scene = context.scene
 					viewLayer = context.view_layer
@@ -67,34 +99,12 @@ class UnityBatchExport(Operator):
 					if not os.path.isdir(projectDir):
 						raise Exception("No project path is invalid.")
 
-					exportdir = projectDir +"Assets/Models"
+					exportDir = projectDir +"Assets/Models"
 #Check if Models folder exists in the project
-					if not os.path.isdir(exportdir):
-						os.makedirs(exportdir)
+					if not os.path.isdir(exportDir):
+						os.makedirs(exportDir)
 
-					bpy.ops.object.select_all(action='DESELECT')
-
-					for collection in sceneCollection.children:
-						collectionPath = exportdir +"/" + collection.name
-						if len(collection.objects)==0 or "*" in collection.name:
-							collectionPath = collectionPath.replace("*","")
-
-							if os.path.isdir(collectionPath) and scene.sync_all:
-								shutil.rmtree(collectionPath)
-						else:
-							if not os.path.isdir(collectionPath):
-								os.mkdir(collectionPath)
-
-							for obj in collection.objects:
-								obj.select_set(True)
-								name = obj.name
-								fn = os.path.join(collectionPath,name)
-								bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
-								bpy.context.object.hide_viewport = False
-								bpy.ops.export_scene.fbx(filepath=fn + ".fbx", use_selection=True, bake_space_transform=True,axis_forward="-Z",axis_up="Y",apply_scale_options="FBX_SCALE_ALL",check_existing=True,filter_glob="*.fbx",bake_anim=True,armature_nodetype='NULL',bake_anim_use_all_actions=True,embed_textures=False,object_types={'MESH'})
-								obj.select_set(False)
-								print("written:", fn)
-
+					UnityBatchExport.export_objects(bpy.context.view_layer.objects,exportDir)
 					return{'FINISHED'}
 
 classes = (MyProperties,UnityExporterPanel,UnityBatchExport)
