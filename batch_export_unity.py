@@ -2,7 +2,7 @@ bl_info = {
 "name": "Unity Batch Exporter",
 "description": "Exports objects directly into the unity project respecting collection hierarchy and ignore flags.",
 "author": "Arda Hamamcıoğlu",
-"version": (2, 0, 6),
+"version": (2, 0, 7),
 "blender" : (2, 80, 0),
 "support": "COMMUNITY",
 "category": "Import-Export"
@@ -54,7 +54,7 @@ class UnityBatchExport(Operator):
 				def execute(self,context):
 					scene = context.scene
 					viewLayer = context.view_layer
-					collectionLayer = bpy.context.view_layer.active_layer_collection
+					sceneCollection = bpy.context.scene.collection
 					myprops = scene.my_props
 
 					bpy.ops.object.make_single_user(type='ALL', object=True, obdata=False, material=False, animation=False)
@@ -74,29 +74,26 @@ class UnityBatchExport(Operator):
 
 					bpy.ops.object.select_all(action='DESELECT')
 
-					for collection in collectionLayer.children:
-						if collection.is_visible:
-							collection = collection.collection
-							collectionPath = exportdir +"/" + collection.name
+					for collection in sceneCollection.children:
+						collectionPath = exportdir +"/" + collection.name
+						if len(collection.objects)==0 or "*" in collection.name:
+							collectionPath = collectionPath.replace("*","")
 
-							if len(collection.objects)==0 or "*" in collection.name:
-								collectionPath = collectionPath.replace("*","")
+							if os.path.isdir(collectionPath) and scene.sync_all:
+								shutil.rmtree(collectionPath)
+						else:
+							if not os.path.isdir(collectionPath):
+								os.mkdir(collectionPath)
 
-								if os.path.isdir(collectionPath) and scene.sync_all:
-									shutil.rmtree(collectionPath)
-							else:
-								if not os.path.isdir(collectionPath):
-									os.mkdir(collectionPath)
-
-								for obj in collection.objects:
-									obj.select_set(True)
-									name = obj.name
-									fn = os.path.join(collectionPath,name)
-									bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
-									bpy.context.object.hide_viewport = False
-									bpy.ops.export_scene.fbx(filepath=fn + ".fbx", use_selection=True, bake_space_transform=True,axis_forward="-Z",axis_up="Y",apply_scale_options="FBX_SCALE_ALL",check_existing=True,filter_glob="*.fbx",bake_anim=True,armature_nodetype='NULL',bake_anim_use_all_actions=True,embed_textures=False,object_types={'MESH'})
-									obj.select_set(False)
-									print("written:", fn)
+							for obj in collection.objects:
+								obj.select_set(True)
+								name = obj.name
+								fn = os.path.join(collectionPath,name)
+								bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+								bpy.context.object.hide_viewport = False
+								bpy.ops.export_scene.fbx(filepath=fn + ".fbx", use_selection=True, bake_space_transform=True,axis_forward="-Z",axis_up="Y",apply_scale_options="FBX_SCALE_ALL",check_existing=True,filter_glob="*.fbx",bake_anim=True,armature_nodetype='NULL',bake_anim_use_all_actions=True,embed_textures=False,object_types={'MESH'})
+								obj.select_set(False)
+								print("written:", fn)
 
 					return{'FINISHED'}
 
