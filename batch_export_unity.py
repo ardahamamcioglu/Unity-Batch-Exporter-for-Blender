@@ -2,7 +2,7 @@ bl_info = {
 "name": "Unity Batch Exporter",
 "description": "Exports objects directly into the unity project respecting collection hierarchy and ignore flags.",
 "author": "Arda Hamamcıoğlu",
-"version": (2, 0, 8),
+"version": (2, 0, 81),
 "blender" : (2, 80, 0),
 "support": "COMMUNITY",
 "category": "Import-Export"
@@ -64,25 +64,30 @@ class UnityBatchExport(Operator):
 					parent_names.append(parent_collection.name)
 					UnityBatchExport.get_parent_collection_names(parent_collection, parent_names)
 					parent_names.reverse()
-					return '/'.join(parent_names)
+					path = '/'.join(parent_names)
+					if  '*' in path:
+					   return ''
+					else:
+						return path
 
 				def export_objects(objects,dir):
 					for asset in objects:
 						asset.select_set(True)
 
 						collectionPath = UnityBatchExport.turn_collection_hierarchy_into_path(asset)
-						exportPath = dir+'/'+collectionPath
-						if not os.path.isdir(exportPath):
-							os.makedirs(exportPath)
+						print(collectionPath)
+						if len(collectionPath.strip())!=0:
+							exportPath = dir+'/'+collectionPath
+							if not os.path.isdir(exportPath):
+								os.makedirs(exportPath)
 						
-						name = asset.name
-						fn = os.path.join(exportPath,name)
-						bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
-						bpy.context.object.hide_viewport = False
-						bpy.ops.export_scene.fbx(filepath=fn + ".fbx", use_selection=True, bake_space_transform=True,axis_forward="-Z",axis_up="Y",apply_scale_options="FBX_SCALE_ALL",check_existing=True,filter_glob="*.fbx",bake_anim=True,armature_nodetype='NULL',bake_anim_use_all_actions=True,embed_textures=False,object_types={'MESH'})
+							name = asset.name
+							fn = os.path.join(exportPath,name)
+							bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+							bpy.context.object.hide_viewport = False
+							bpy.ops.export_scene.fbx(filepath=fn + ".fbx", use_selection=True, bake_space_transform=True,axis_forward="-Z",axis_up="Y",apply_scale_options="FBX_SCALE_ALL",check_existing=True,filter_glob="*.fbx",bake_anim=True,armature_nodetype='NULL',bake_anim_use_all_actions=True,embed_textures=False,object_types={'MESH'})
+							print("Exported:", asset.name)
 						asset.select_set(False)
-						print("Exported:", asset.name)
-	
 				def execute(self,context):
 					scene = context.scene
 					viewLayer = context.view_layer
